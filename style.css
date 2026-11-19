@@ -104,12 +104,10 @@ body {
 
 /* منطقة اللعبة */
 #game-container {
-    --game-scale: 1;
     position: relative;
     width: 960px;
     height: 540px;
     flex-shrink: 0;
-    transform: scale(var(--game-scale));
     transform-origin: center center;
     box-shadow: 0 0 40px rgba(0, 0, 0, 0.9);
     border: 1px solid #1e293b;
@@ -442,7 +440,7 @@ canvas {
     to { margin-top: -6px; }
 }
 
-/* أزرار التحكم باللمس للموبايل */
+/* أزرار التحكم باللمس للموبايل: مخفية في البداية والمشاهد السينمائية */
 #mobile-controls {
     position: absolute;
     inset: 0;
@@ -452,7 +450,7 @@ canvas {
 }
 
 @media (hover: none) and (pointer: coarse), (max-width: 900px) {
-    #mobile-controls {
+    #game-container.gameplay-active #mobile-controls {
         display: block;
     }
 }
@@ -494,27 +492,34 @@ canvas {
 .touch-right { grid-column: 3; grid-row: 2; }
 .touch-down { grid-column: 2; grid-row: 3; }
 
-.touch-action {
+/* إشارة تفاعل لمسية عند الاقتراب من اللابتوب أو الساعة */
+.mobile-interact-badge {
     position: absolute;
-    bottom: 36px;
-    right: 28px;
-    width: 78px;
-    height: 78px;
-    border-radius: 50%;
-    background: rgba(255, 77, 109, 0.25);
-    border: 2px solid #ff4d6d;
+    bottom: 34px;
+    right: 24px;
+    background: rgba(255, 77, 109, 0.22);
+    border: 1.5px solid #ff4d6d;
     color: #ffffff;
+    padding: 10px 16px;
+    border-radius: 999px;
     font-family: 'Share Tech Mono', monospace;
-    font-size: 14px;
+    font-size: 13px;
     letter-spacing: 1px;
-    pointer-events: auto;
-    touch-action: none;
+    z-index: 26;
+    cursor: pointer;
+    touch-action: manipulation;
+    box-shadow: 0 0 16px rgba(255, 77, 109, 0.35);
+    animation: badgePulse 1.3s infinite alternate;
 }
 
-.touch-action:active,
-.touch-action.is-pressed {
+.mobile-interact-badge:active {
     background: rgba(255, 77, 109, 0.65);
-    transform: scale(0.95);
+    transform: scale(0.96);
+}
+
+@keyframes badgePulse {
+    from { transform: translateY(0px); }
+    to { transform: translateY(-4px); }
 }
 
 /* مربع الحوار الأنمي */
