@@ -131,7 +131,7 @@ window.addEventListener('keyup', (e) => {
     keys[e.key.toLowerCase()] = false;
 });
 
-// Mobile Touch Controls (Movement + Interact E)
+// Mobile Touch Controls (Movement + Tap PC/Clock Badge + Direct Canvas Tap)
 function setupTouchControls() {
     const bindTouch = (id, keyName) => {
         const btn = document.getElementById(id);
@@ -141,15 +141,6 @@ function setupTouchControls() {
             if (e) e.preventDefault();
             btn.classList.add('is-pressed');
             keys[keyName] = true;
-
-            if (
-                keyName === 'e' &&
-                !gameState.dialogueActive &&
-                !gameState.modalOpen &&
-                gameState.started
-            ) {
-                checkInteraction();
-            }
         };
 
         const release = (e) => {
@@ -170,8 +161,42 @@ function setupTouchControls() {
     bindTouch('btn-down', 'arrowdown');
     bindTouch('btn-left', 'arrowleft');
     bindTouch('btn-right', 'arrowright');
-    bindTouch('btn-action', 'e');
-    bindTouch('touch-action-btn', 'e');
+
+    const mobileBadge = document.getElementById('mobile-interact-badge');
+    if (mobileBadge) {
+        const triggerInteract = (e) => {
+            if (e) e.preventDefault();
+            if (!gameState.dialogueActive && !gameState.modalOpen && gameState.started) {
+                checkInteraction();
+            }
+        };
+        mobileBadge.addEventListener('click', triggerInteract);
+        mobileBadge.addEventListener('touchstart', triggerInteract, { passive: false });
+    }
+
+    canvas.addEventListener('click', (e) => {
+        if (!gameState.started || gameState.dialogueActive || gameState.modalOpen || gameState.sceneEnded) {
+            return;
+        }
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        const clickX = (e.clientX - rect.left) * scaleX;
+        const clickY = (e.clientY - rect.top) * scaleY;
+
+        for (const item of interactables) {
+            const distToPoint = Math.hypot(clickX - item.x, clickY - item.y);
+            const playerDist = Math.hypot(
+                (player.x + player.width / 2) - item.x,
+                (player.y + player.height / 2) - item.y
+            );
+            if (distToPoint < 95 && playerDist < item.radius) {
+                activeTarget = item;
+                checkInteraction();
+                break;
+            }
+        }
+    });
 }
 
 setupTouchControls();
@@ -552,6 +577,14 @@ function showDialogue(text, portraitSrc = null, speed = 36, onComplete = null, s
     startTypingText(text, portraitSrc, speed, speakerName);
 }
 
+function queueOrShowDialogue(text, portraitSrc = null, speed = 36, speakerName = 'LOLITA') {
+    if (gameState.dialogueActive || isTyping) {
+        dialogueQueue.push({ text, portraitSrc, speed, speakerName });
+        return;
+    }
+    startTypingText(text, portraitSrc, speed, speakerName);
+}
+
 function handleDialogueAdvance() {
     if (!gameState.dialogueActive) return;
 
@@ -730,6 +763,10 @@ document.getElementById('start-btn').addEventListener('click', (e) => {
 
                                 gameState.started = true;
                                 gameState.messageArrived = true;
+                                const gameContainer = document.getElementById('game-container');
+                                if (gameContainer) {
+                                    gameContainer.classList.add('gameplay-active');
+                                }
                             });
                         });
                     });
@@ -843,6 +880,8 @@ function updateInteractions() {
         }
     }
 
+    const mobileBadge = document.getElementById('mobile-interact-badge');
+
     if (
         activeTarget &&
         !gameState.modalOpen &&
@@ -853,8 +892,16 @@ function updateInteractions() {
         promptEl.style.left = `${activeTarget.x}px`;
         promptEl.style.top = `${activeTarget.y - 45}px`;
         promptEl.classList.remove('hidden');
+
+        if (mobileBadge) {
+            mobileBadge.textContent = activeTarget.id === 'computer' ? '👆 TAP PC' : '👆 TAP CLOCK';
+            mobileBadge.classList.remove('hidden');
+        }
     } else {
         promptEl.classList.add('hidden');
+        if (mobileBadge) {
+            mobileBadge.classList.add('hidden');
+        }
     }
 }
 
