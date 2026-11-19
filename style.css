@@ -3,18 +3,23 @@
 * {
     box-sizing: border-box;
     user-select: none;
+    -webkit-user-select: none;
 }
 
+html,
 body {
     margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
     background-color: #07090d;
     color: #e0e6ed;
     font-family: 'Cairo', sans-serif;
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
     overflow: hidden;
+    touch-action: none;
 }
 
 /* الشاشات المغطية (البداية والانتقالات) */
@@ -41,6 +46,7 @@ body {
 #start-screen {
     background: radial-gradient(circle at center, #161b26 0%, #07090d 100%);
     text-align: center;
+    padding: 16px;
 }
 
 .clock-badge {
@@ -53,7 +59,7 @@ body {
 
 .glitch-title {
     font-family: 'Share Tech Mono', monospace;
-    font-size: 64px;
+    font-size: clamp(36px, 9vw, 64px);
     margin: 0;
     letter-spacing: 8px;
     color: #ffffff;
@@ -77,6 +83,7 @@ body {
     letter-spacing: 2px;
     cursor: pointer;
     transition: all 0.3s ease;
+    touch-action: manipulation;
 }
 
 .cyber-btn:hover {
@@ -87,23 +94,27 @@ body {
 
 #cinematic-text {
     font-family: 'Share Tech Mono', monospace;
-    font-size: 22px;
+    font-size: clamp(16px, 4vw, 22px);
     letter-spacing: 3px;
     text-align: center;
     line-height: 1.8;
     color: #cbd5e1;
+    padding: 0 16px;
 }
 
 /* منطقة اللعبة */
 #game-container {
+    --game-scale: 1;
     position: relative;
     width: 960px;
     height: 540px;
     flex-shrink: 0;
+    transform: scale(var(--game-scale));
     transform-origin: center center;
     box-shadow: 0 0 40px rgba(0, 0, 0, 0.9);
     border: 1px solid #1e293b;
     overflow: hidden;
+    touch-action: none;
 }
 
 canvas {
@@ -111,6 +122,7 @@ canvas {
     width: 960px;
     height: 540px;
     background-color: #131722;
+    touch-action: none;
 }
 
 /* دخول الكاميرا إلى الغرفة */
@@ -407,6 +419,7 @@ canvas {
     padding: 6px 14px;
     cursor: pointer;
     font-family: 'Share Tech Mono', monospace;
+    touch-action: manipulation;
 }
 
 /* زر التفاعل فوق العناصر */
@@ -429,6 +442,81 @@ canvas {
     to { margin-top: -6px; }
 }
 
+/* أزرار التحكم باللمس للموبايل */
+#mobile-controls {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 24;
+    display: none;
+}
+
+@media (hover: none) and (pointer: coarse), (max-width: 900px) {
+    #mobile-controls {
+        display: block;
+    }
+}
+
+.mobile-dpad {
+    position: absolute;
+    bottom: 24px;
+    left: 24px;
+    display: grid;
+    grid-template-columns: repeat(3, 52px);
+    grid-template-rows: repeat(3, 52px);
+    gap: 6px;
+    pointer-events: auto;
+}
+
+.touch-btn {
+    background: rgba(10, 14, 23, 0.72);
+    color: #e0e6ed;
+    border: 1px solid rgba(138, 180, 248, 0.45);
+    border-radius: 10px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    touch-action: none;
+}
+
+.touch-btn:active,
+.touch-btn.is-pressed {
+    background: rgba(138, 180, 248, 0.32);
+    border-color: #8ab4f8;
+    transform: scale(0.95);
+}
+
+.touch-up { grid-column: 2; grid-row: 1; }
+.touch-left { grid-column: 1; grid-row: 2; }
+.touch-right { grid-column: 3; grid-row: 2; }
+.touch-down { grid-column: 2; grid-row: 3; }
+
+.touch-action {
+    position: absolute;
+    bottom: 36px;
+    right: 28px;
+    width: 78px;
+    height: 78px;
+    border-radius: 50%;
+    background: rgba(255, 77, 109, 0.25);
+    border: 2px solid #ff4d6d;
+    color: #ffffff;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 14px;
+    letter-spacing: 1px;
+    pointer-events: auto;
+    touch-action: none;
+}
+
+.touch-action:active,
+.touch-action.is-pressed {
+    background: rgba(255, 77, 109, 0.65);
+    transform: scale(0.95);
+}
+
 /* مربع الحوار الأنمي */
 #dialogue-box {
     position: absolute;
@@ -442,6 +530,7 @@ canvas {
     border-radius: 4px;
     cursor: pointer;
     z-index: 30;
+    touch-action: manipulation;
 }
 
 #dialogue-box:not(.hidden) {
@@ -468,11 +557,16 @@ canvas {
     color: #8ab4f8;
     font-size: 14px;
     margin-bottom: 6px;
+    direction: ltr;
+    text-align: left;
 }
 
 #dialogue-text {
     margin: 0;
     font-size: 18px;
+    direction: ltr;
+    text-align: left;
+    unicode-bidi: plaintext;
 }
 
 .next-hint {
@@ -652,16 +746,7 @@ canvas {
     50% { border-color: #ff4d6d; box-shadow: 0 0 15px rgba(255,77,109,0.5); }
     100% { border-color: #8ab4f8; }
 }
-#dialogue-text {
-    direction: ltr;
-    text-align: left;
-    unicode-bidi: plaintext;
-}
 
-.speaker-name {
-    direction: ltr;
-    text-align: left;
-}
 .next-prompt {
     display: inline-block;
     margin-top: 10px;
