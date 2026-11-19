@@ -440,18 +440,18 @@ canvas {
     to { margin-top: -6px; }
 }
 
-/* أزرار التحكم باللمس للموبايل: مخفية في البداية والمشاهد السينمائية */
+/* أزرار التحكم باللمس للموبايل: مخفية تماماً في البداية والمشاهد السينمائية */
 #mobile-controls {
     position: absolute;
     inset: 0;
     pointer-events: none;
     z-index: 24;
-    display: none;
+    display: none !important;
 }
 
 @media (hover: none) and (pointer: coarse), (max-width: 900px) {
     #game-container.gameplay-active #mobile-controls {
-        display: block;
+        display: block !important;
     }
 }
 
