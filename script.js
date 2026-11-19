@@ -656,6 +656,14 @@ document.getElementById('start-btn').addEventListener('click', (e) => {
     if (e && e.currentTarget && typeof e.currentTarget.blur === 'function') {
         e.currentTarget.blur();
     }
+
+    if (isMobileDevice()) {
+        const docEl = document.documentElement;
+        if (docEl && docEl.requestFullscreen) {
+            docEl.requestFullscreen().catch(() => {});
+        }
+    }
+
     document.getElementById('start-screen').classList.remove('active');
 
     startHeavyRainSound(0.22);
@@ -865,6 +873,13 @@ function updatePlayer() {
 let activeTarget = null;
 const promptEl = document.getElementById('interaction-prompt');
 
+function isMobileDevice() {
+    const hasTouch =
+        'ontouchstart' in window ||
+        (navigator && navigator.maxTouchPoints > 0);
+    return hasTouch || window.innerWidth <= 900;
+}
+
 function updateInteractions() {
     activeTarget = null;
 
@@ -894,8 +909,12 @@ function updateInteractions() {
         promptEl.classList.remove('hidden');
 
         if (mobileBadge) {
-            mobileBadge.textContent = activeTarget.id === 'computer' ? '👆 TAP PC' : '👆 TAP CLOCK';
-            mobileBadge.classList.remove('hidden');
+            if (isMobileDevice()) {
+                mobileBadge.textContent = activeTarget.id === 'computer' ? '👆 TAP PC' : '👆 TAP CLOCK';
+                mobileBadge.classList.remove('hidden');
+            } else {
+                mobileBadge.classList.add('hidden');
+            }
         }
     } else {
         promptEl.classList.add('hidden');
@@ -984,6 +1003,26 @@ document.getElementById('confirm-clue-btn').addEventListener('click', () => {
     );
 });
 
+// Open Evidence Notebook
+const notebookBtn = document.getElementById('notebook-btn');
+if (notebookBtn) {
+    notebookBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (gameState.modalOpen) return;
+
+        if (!gameState.clueFound) {
+            showDialogue('No evidence collected yet.', null);
+            return;
+        }
+
+        if (typeof openNotebook === 'function') {
+            openNotebook();
+        } else {
+            showDialogue('Evidence #001: Number [86] found behind the stopped clock (03:14).', null);
+        }
+    });
+}
+
 // Render Loop
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -1070,18 +1109,22 @@ function resizeGame() {
     const container = document.getElementById('game-container');
     if (!container) return;
 
-    const windowWidth = window.innerWidth;
-    const windowHeight = window.innerHeight;
+    const windowWidth = window.innerWidth || document.documentElement.clientWidth;
+    const windowHeight = window.innerHeight || document.documentElement.clientHeight;
 
     const scaleX = windowWidth / 960;
     const scaleY = windowHeight / 540;
 
     const scale = Math.min(scaleX, scaleY);
 
+    container.style.transformOrigin = 'center center';
     container.style.transform = `scale(${scale})`;
 }
 
 window.addEventListener('resize', resizeGame);
 window.addEventListener('orientationchange', resizeGame);
 window.addEventListener('DOMContentLoaded', resizeGame);
+document.addEventListener('fullscreenchange', () => {
+    setTimeout(resizeGame, 120);
+});
 resizeGame();
