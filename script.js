@@ -657,13 +657,6 @@ document.getElementById('start-btn').addEventListener('click', (e) => {
         e.currentTarget.blur();
     }
 
-    if (isMobileDevice()) {
-        const docEl = document.documentElement;
-        if (docEl && docEl.requestFullscreen) {
-            docEl.requestFullscreen().catch(() => {});
-        }
-    }
-
     document.getElementById('start-screen').classList.remove('active');
 
     startHeavyRainSound(0.22);
@@ -1112,10 +1105,12 @@ function resizeGame() {
     const windowWidth = window.innerWidth || document.documentElement.clientWidth;
     const windowHeight = window.innerHeight || document.documentElement.clientHeight;
 
-    const scaleX = windowWidth / 960;
-    const scaleY = windowHeight / 540;
-
-    const scale = Math.min(scaleX, scaleY);
+    let scale;
+    if (isMobileDevice()) {
+        scale = windowWidth / 960;
+    } else {
+        scale = Math.min(windowWidth / 960, windowHeight / 540);
+    }
 
     container.style.transformOrigin = 'center center';
     container.style.transform = `scale(${scale})`;
@@ -1124,7 +1119,4 @@ function resizeGame() {
 window.addEventListener('resize', resizeGame);
 window.addEventListener('orientationchange', resizeGame);
 window.addEventListener('DOMContentLoaded', resizeGame);
-document.addEventListener('fullscreenchange', () => {
-    setTimeout(resizeGame, 120);
-});
 resizeGame();
