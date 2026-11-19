@@ -131,7 +131,7 @@ window.addEventListener('keyup', (e) => {
     keys[e.key.toLowerCase()] = false;
 });
 
-// Mobile Touch Controls
+// Mobile Touch Controls (Movement + Interact E)
 function setupTouchControls() {
     const bindTouch = (id, keyName) => {
         const btn = document.getElementById(id);
@@ -139,11 +139,22 @@ function setupTouchControls() {
 
         const press = (e) => {
             if (e) e.preventDefault();
+            btn.classList.add('is-pressed');
             keys[keyName] = true;
+
+            if (
+                keyName === 'e' &&
+                !gameState.dialogueActive &&
+                !gameState.modalOpen &&
+                gameState.started
+            ) {
+                checkInteraction();
+            }
         };
 
         const release = (e) => {
             if (e) e.preventDefault();
+            btn.classList.remove('is-pressed');
             keys[keyName] = false;
         };
 
@@ -159,6 +170,8 @@ function setupTouchControls() {
     bindTouch('btn-down', 'arrowdown');
     bindTouch('btn-left', 'arrowleft');
     bindTouch('btn-right', 'arrowright');
+    bindTouch('btn-action', 'e');
+    bindTouch('touch-action-btn', 'e');
 }
 
 setupTouchControls();
@@ -385,10 +398,8 @@ function triggerLightningWithThunder(lightningFlash, sleepingLayer, intensity = 
         lightningFlash.style.opacity = '0.96';
     }
 
-    // Play thunder sound at the exact instant the light appears
     playHeavyThunderSound(intensity);
 
-    // Continuous subtle rumble vibration during the thunder strike
     stopThunderShake(sleepingLayer);
     if (sleepingLayer) {
         let tick = 0;
@@ -541,14 +552,6 @@ function showDialogue(text, portraitSrc = null, speed = 36, onComplete = null, s
     startTypingText(text, portraitSrc, speed, speakerName);
 }
 
-function queueOrShowDialogue(text, portraitSrc = null, speed = 36, speakerName = 'LOLITA') {
-    if (gameState.dialogueActive || isTyping) {
-        dialogueQueue.push({ text, portraitSrc, speed, speakerName });
-        return;
-    }
-    startTypingText(text, portraitSrc, speed, speakerName);
-}
-
 function handleDialogueAdvance() {
     if (!gameState.dialogueActive) return;
 
@@ -622,7 +625,6 @@ document.getElementById('start-btn').addEventListener('click', (e) => {
     }
     document.getElementById('start-screen').classList.remove('active');
 
-    // Start heavy rain sound immediately on user click
     startHeavyRainSound(0.22);
 
     const buildingScene = document.getElementById('building-scene');
@@ -643,7 +645,6 @@ document.getElementById('start-btn').addEventListener('click', (e) => {
 
     createRain(120);
 
-    // 1. Outside the Building (Heavy Rain, NO DIALOGUE)
     buildingScene.classList.remove('hidden');
     requestAnimationFrame(() => {
         buildingScene.classList.add('active');
@@ -652,7 +653,6 @@ document.getElementById('start-btn').addEventListener('click', (e) => {
         }, 120);
     });
 
-    // 2. Entering the Bedroom / Sleeping + Exact Lightning-Synced Thunder & Shake (NO DIALOGUE)
     setTimeout(() => {
         canvas.classList.add('room-entered');
 
@@ -676,17 +676,14 @@ document.getElementById('start-btn').addEventListener('click', (e) => {
             sleepingLayer.classList.add('show-scene');
         }
 
-        // First strike: light, thunder & shake together
         setTimeout(() => {
             triggerLightningWithThunder(lightningFlash, sleepingLayer, 1.0);
         }, 200);
 
-        // Second strike: light, thunder & shake together
         setTimeout(() => {
             triggerLightningWithThunder(lightningFlash, sleepingLayer, 0.92);
         }, 2900);
 
-        // After sleeping + thunder -> 3. Lolita Wakes Up (Rain & shake stop right when she wakes up!)
         setTimeout(() => {
             stopRainSound(0.7);
             stopThunderShake(sleepingLayer);
@@ -711,13 +708,10 @@ document.getElementById('start-btn').addEventListener('click', (e) => {
                 awakeLayer.classList.add('show-scene');
             }
 
-            // 3. Lolita Wakes Up (two sequential lines on awake-surprised.jpg)
             showDialogue('Hmm... What happened?', null, 36, () => {
                 showDialogue('I was having a strange dream.', null, 36, () => {
-                    // 4. The Clock — 03:14 AM
                     setCutsceneImage('clock-scene.jpg');
                     showDialogue('Why am I awake at this hour?', null, 36, () => {
-                        // 5. Laptop Notification: sound + screen glow + two lines in English
                         setCutsceneImage('pc-glow.jpg');
                         playPcNotificationSound();
 
@@ -734,7 +728,6 @@ document.getElementById('start-btn').addEventListener('click', (e) => {
                                 closeDialogue();
                                 hideCutsceneImage();
 
-                                // Gameplay starts in the room
                                 gameState.started = true;
                                 gameState.messageArrived = true;
                             });
@@ -952,7 +945,6 @@ function draw() {
         ctx.drawImage(roomBg, 0, 0, canvas.width, canvas.height);
     }
 
-    // Message indicator badge above the laptop on the desk
     if (gameState.messageArrived && !gameState.messageRead) {
         ctx.fillStyle = '#ff4d6d';
         ctx.fillRect(175, 290, 22, 16);
@@ -1043,4 +1035,6 @@ function resizeGame() {
 }
 
 window.addEventListener('resize', resizeGame);
+window.addEventListener('orientationchange', resizeGame);
 window.addEventListener('DOMContentLoaded', resizeGame);
+resizeGame();
