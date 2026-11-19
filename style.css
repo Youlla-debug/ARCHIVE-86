@@ -1,0 +1,760 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&family=Share+Tech+Mono&display=swap');
+
+* {
+    box-sizing: border-box;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #07090d;
+    color: #e0e6ed;
+    font-family: 'Cairo', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    touch-action: none;
+}
+
+/* الشاشات المغطية (البداية والانتقالات) */
+.overlay-screen {
+    position: fixed;
+    inset: 0;
+    background: #07090d;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.8s ease;
+}
+
+.overlay-screen.active {
+    opacity: 1;
+    pointer-events: all;
+}
+
+/* شاشة البداية */
+#start-screen {
+    background: radial-gradient(circle at center, #161b26 0%, #07090d 100%);
+    text-align: center;
+    padding: 16px;
+}
+
+.clock-badge {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 24px;
+    color: #ff4d6d;
+    letter-spacing: 4px;
+    margin-bottom: 10px;
+}
+
+.glitch-title {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: clamp(36px, 9vw, 64px);
+    margin: 0;
+    letter-spacing: 8px;
+    color: #ffffff;
+    text-shadow: 0 0 15px rgba(138, 180, 248, 0.5);
+}
+
+.subtitle {
+    font-family: 'Share Tech Mono', monospace;
+    letter-spacing: 5px;
+    color: #8fa1b3;
+    margin-bottom: 40px;
+}
+
+.cyber-btn {
+    background: transparent;
+    border: 1px solid #8ab4f8;
+    color: #8ab4f8;
+    padding: 12px 28px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 16px;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    touch-action: manipulation;
+}
+
+.cyber-btn:hover {
+    background: #8ab4f8;
+    color: #07090d;
+    box-shadow: 0 0 20px rgba(138, 180, 248, 0.4);
+}
+
+#cinematic-text {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: clamp(16px, 4vw, 22px);
+    letter-spacing: 3px;
+    text-align: center;
+    line-height: 1.8;
+    color: #cbd5e1;
+    padding: 0 16px;
+}
+
+/* منطقة اللعبة */
+#game-container {
+    --game-scale: 1;
+    position: relative;
+    width: 960px;
+    height: 540px;
+    flex-shrink: 0;
+    transform: scale(var(--game-scale));
+    transform-origin: center center;
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.9);
+    border: 1px solid #1e293b;
+    overflow: hidden;
+    touch-action: none;
+}
+
+canvas {
+    display: block;
+    width: 960px;
+    height: 540px;
+    background-color: #131722;
+    touch-action: none;
+}
+
+/* دخول الكاميرا إلى الغرفة */
+#gameCanvas {
+    position: relative;
+    z-index: 5;
+    transform: scale(1.18);
+    transform-origin: 36% 42%;
+    transition: transform 2.2s cubic-bezier(0.22, 1, 0.36, 1), filter 1.6s ease;
+    filter: brightness(0.65) contrast(1.05);
+}
+
+#gameCanvas.room-entered {
+    transform: scale(1);
+    filter: brightness(1) contrast(1);
+}
+
+/* مشهد المبنى الخارجي والمطر */
+.scene-overlay {
+    position: absolute;
+    inset: 0;
+    width: 960px;
+    height: 540px;
+    overflow: hidden;
+    z-index: 15;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.8s ease;
+}
+
+.scene-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+#building-bg {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scale(1);
+    transform-origin: 50% 52%;
+    transition: transform 4.5s ease-in-out;
+}
+
+.scene-overlay.zoom-in #building-bg {
+    transform: scale(1.65);
+}
+
+.rain-layer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 16;
+}
+
+.rain-drop {
+    position: absolute;
+    top: -30px;
+    width: 1.5px;
+    height: 22px;
+    background: linear-gradient(to bottom, rgba(180, 215, 255, 0), rgba(180, 215, 255, 0.55));
+    transform: rotate(14deg);
+    animation: rainFall linear infinite;
+}
+
+@keyframes rainFall {
+    0% {
+        transform: translate3d(0, -30px, 0) rotate(14deg);
+    }
+    100% {
+        transform: translate3d(-90px, 580px, 0) rotate(14deg);
+    }
+}
+
+/* مشهد البطلة نائمة ملء الشاشة + تأثير الرعد */
+.sleeping-layer {
+    position: absolute;
+    inset: 0;
+    width: 960px;
+    height: 540px;
+    z-index: 25;
+    pointer-events: none;
+    background: #070912;
+    overflow: hidden;
+    display: none;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+
+.sleeping-layer.show-scene {
+    display: block !important;
+    opacity: 1 !important;
+}
+
+#sleeping-heroine {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scale(1.05);
+    filter: brightness(0.82) contrast(1.08) saturate(0.95);
+    animation: sleepingSlowPan 6.5s ease-in-out forwards, thunderImageGlow 6s ease-in-out forwards;
+}
+
+@keyframes sleepingSlowPan {
+    0% {
+        transform: scale(1.07);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+@keyframes thunderImageGlow {
+    0%, 16% {
+        filter: brightness(0.82) contrast(1.08);
+    }
+    20% {
+        filter: brightness(1.6) contrast(1.25) saturate(1.2) drop-shadow(0 0 28px rgba(155, 205, 255, 0.9));
+    }
+    24% {
+        filter: brightness(0.84) contrast(1.08);
+    }
+    28% {
+        filter: brightness(1.8) contrast(1.3) saturate(1.25) drop-shadow(0 0 36px rgba(185, 228, 255, 1));
+    }
+    35%, 56% {
+        filter: brightness(0.82) contrast(1.08);
+    }
+    60% {
+        filter: brightness(1.5) contrast(1.22) saturate(1.18) drop-shadow(0 0 24px rgba(150, 200, 255, 0.85));
+    }
+    66%, 100% {
+        filter: brightness(0.82) contrast(1.08);
+    }
+}
+
+.lightning-flash {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 35% 30%, rgba(210, 235, 255, 0.82), rgba(110, 165, 245, 0.35) 60%, rgba(15, 25, 50, 0.1));
+    opacity: 0;
+    mix-blend-mode: screen;
+    pointer-events: none;
+    animation: thunderOverlayFlash 6s ease-in-out forwards;
+}
+
+@keyframes thunderOverlayFlash {
+    0%, 16% {
+        opacity: 0;
+    }
+    20% {
+        opacity: 0.85;
+    }
+    24% {
+        opacity: 0.08;
+    }
+    28% {
+        opacity: 1;
+    }
+    36%, 56% {
+        opacity: 0;
+    }
+    60% {
+        opacity: 0.75;
+    }
+    68%, 100% {
+        opacity: 0;
+    }
+}
+
+/* مشهد الاستيقاظ / الدهشة ملء الشاشة */
+.awake-layer {
+    position: absolute;
+    inset: 0;
+    width: 960px;
+    height: 540px;
+    z-index: 26;
+    pointer-events: none;
+    background: #070912;
+    overflow: hidden;
+    display: none;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+
+.awake-layer.show-scene {
+    display: block !important;
+    opacity: 1 !important;
+}
+
+#awake-heroine {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: brightness(0.95) contrast(1.08);
+    animation: awakeZoomIn 4s ease-out forwards;
+}
+
+@keyframes awakeZoomIn {
+    0% {
+        transform: scale(1.06);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* طبقة صور المشهد الافتتاحي (الساعة واللابتوب) */
+.cutscene-layer {
+    position: absolute;
+    inset: 0;
+    width: 960px;
+    height: 540px;
+    z-index: 27;
+    pointer-events: none;
+    background: #070912;
+    overflow: hidden;
+    display: none;
+    opacity: 0;
+    transition: opacity 0.45s ease;
+}
+
+.cutscene-layer.show-scene {
+    display: block !important;
+    opacity: 1 !important;
+}
+
+#cutscene-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    animation: cutsceneSlowZoom 4s ease-out forwards;
+}
+
+@keyframes cutsceneSlowZoom {
+    0% {
+        transform: scale(1.05);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* شاشات الانتقال الداخلية */
+.screen {
+    position: absolute;
+    inset: 0;
+    width: 960px;
+    height: 540px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(6, 8, 15, 0.92);
+    z-index: 35;
+    opacity: 0;
+    transition: opacity 0.6s ease;
+}
+
+.screen.active {
+    display: flex;
+    opacity: 1;
+}
+
+#hud {
+    position: absolute;
+    top: 15px;
+    left: 20px;
+    right: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: 'Share Tech Mono', monospace;
+    z-index: 20;
+}
+
+#location-tag {
+    background: rgba(7, 9, 13, 0.75);
+    padding: 6px 14px;
+    border-left: 3px solid #ff4d6d;
+    font-size: 14px;
+}
+
+.hud-btn {
+    background: rgba(7, 9, 13, 0.85);
+    color: #8ab4f8;
+    border: 1px solid #334155;
+    padding: 6px 14px;
+    cursor: pointer;
+    font-family: 'Share Tech Mono', monospace;
+    touch-action: manipulation;
+}
+
+/* زر التفاعل فوق العناصر */
+#interaction-prompt {
+    position: absolute;
+    background: #ff4d6d;
+    color: #fff;
+    padding: 4px 10px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    border-radius: 3px;
+    transform: translate(-50%, -100%);
+    pointer-events: none;
+    z-index: 22;
+    animation: bounce 1s infinite alternate;
+}
+
+@keyframes bounce {
+    from { margin-top: 0px; }
+    to { margin-top: -6px; }
+}
+
+/* أزرار التحكم باللمس للموبايل */
+#mobile-controls {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 24;
+    display: none;
+}
+
+@media (hover: none) and (pointer: coarse), (max-width: 900px) {
+    #mobile-controls {
+        display: block;
+    }
+}
+
+.mobile-dpad {
+    position: absolute;
+    bottom: 24px;
+    left: 24px;
+    display: grid;
+    grid-template-columns: repeat(3, 52px);
+    grid-template-rows: repeat(3, 52px);
+    gap: 6px;
+    pointer-events: auto;
+}
+
+.touch-btn {
+    background: rgba(10, 14, 23, 0.72);
+    color: #e0e6ed;
+    border: 1px solid rgba(138, 180, 248, 0.45);
+    border-radius: 10px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    touch-action: none;
+}
+
+.touch-btn:active,
+.touch-btn.is-pressed {
+    background: rgba(138, 180, 248, 0.32);
+    border-color: #8ab4f8;
+    transform: scale(0.95);
+}
+
+.touch-up { grid-column: 2; grid-row: 1; }
+.touch-left { grid-column: 1; grid-row: 2; }
+.touch-right { grid-column: 3; grid-row: 2; }
+.touch-down { grid-column: 2; grid-row: 3; }
+
+.touch-action {
+    position: absolute;
+    bottom: 36px;
+    right: 28px;
+    width: 78px;
+    height: 78px;
+    border-radius: 50%;
+    background: rgba(255, 77, 109, 0.25);
+    border: 2px solid #ff4d6d;
+    color: #ffffff;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 14px;
+    letter-spacing: 1px;
+    pointer-events: auto;
+    touch-action: none;
+}
+
+.touch-action:active,
+.touch-action.is-pressed {
+    background: rgba(255, 77, 109, 0.65);
+    transform: scale(0.95);
+}
+
+/* مربع الحوار الأنمي */
+#dialogue-box {
+    position: absolute;
+    bottom: 20px;
+    left: 40px;
+    right: 40px;
+    background: rgba(10, 14, 23, 0.92);
+    border: 1px solid #475569;
+    border-right: 4px solid #8ab4f8;
+    padding: 18px 24px;
+    border-radius: 4px;
+    cursor: pointer;
+    z-index: 30;
+    touch-action: manipulation;
+}
+
+#dialogue-box:not(.hidden) {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.speaker-avatar {
+    width: 68px;
+    height: 68px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 1px solid #8ab4f8;
+    flex-shrink: 0;
+}
+
+.dialogue-content {
+    flex: 1;
+}
+
+.speaker-name {
+    font-family: 'Share Tech Mono', monospace;
+    color: #8ab4f8;
+    font-size: 14px;
+    margin-bottom: 6px;
+    direction: ltr;
+    text-align: left;
+}
+
+#dialogue-text {
+    margin: 0;
+    font-size: 18px;
+    direction: ltr;
+    text-align: left;
+    unicode-bidi: plaintext;
+}
+
+.next-hint {
+    display: block;
+    text-align: left;
+    font-size: 12px;
+    color: #64748b;
+    margin-top: 8px;
+}
+
+/* النوافذ المنبثقة (الكمبيوتر والساعة) */
+.modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 50;
+}
+
+.modal-window {
+    background: #0f172a;
+    border: 1px solid #334155;
+    width: 500px;
+    max-width: 90%;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+}
+
+.modal-header {
+    background: #1e293b;
+    padding: 12px 18px;
+    display: flex;
+    justify-content: space-between;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 14px;
+    color: #94a3b8;
+}
+
+.close-modal {
+    background: none;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.modal-body {
+    padding: 20px;
+}
+
+.msg-text {
+    font-family: 'Share Tech Mono', monospace;
+    color: #e2e8f0;
+    background: #090d16;
+    padding: 12px;
+    border-left: 3px solid #8ab4f8;
+    direction: ltr;
+}
+
+.attachment-box {
+    margin-top: 15px;
+    padding: 12px;
+    background: #1e293b;
+    border: 1px dashed #8ab4f8;
+    cursor: pointer;
+    text-align: center;
+    font-family: 'Share Tech Mono', monospace;
+}
+
+.attachment-box:hover {
+    background: #283548;
+}
+
+.files-grid {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.file-item {
+    flex: 1;
+    padding: 10px;
+    background: #1e293b;
+    text-align: center;
+    font-size: 12px;
+    font-family: 'Share Tech Mono', monospace;
+    cursor: pointer;
+    border: 1px solid #475569;
+}
+
+.file-item.locked {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.paper-note {
+    margin-top: 15px;
+    background: #f8fafc;
+    color: #0f172a;
+    padding: 15px;
+    text-align: center;
+    font-family: 'Share Tech Mono', monospace;
+    transform: rotate(-1deg);
+}
+
+.big-clock {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 56px;
+    color: #ff4d6d;
+    margin: 15px 0;
+}
+
+.clue-card {
+    text-align: center;
+    padding: 30px;
+    border: 2px solid #ff4d6d;
+}
+
+.clue-number {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 60px;
+    margin: 10px 0;
+    color: #ff4d6d;
+}
+
+.center-text { text-align: center; }
+.hidden { display: none !important; }
+
+/* تنسيقات عناصر المشهد الثاني */
+.evidence-item {
+    background: #1e293b;
+    border: 1px solid #475569;
+    padding: 12px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    font-family: 'Share Tech Mono', monospace;
+    transition: 0.2s;
+}
+
+.evidence-item:hover {
+    border-color: #8ab4f8;
+    background: #283548;
+}
+
+.evidence-item.locked {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.phone-notification {
+    position: fixed;
+    top: 30px;
+    right: 30px;
+    background: rgba(15, 23, 42, 0.95);
+    border-left: 4px solid #ff4d6d;
+    padding: 15px 20px;
+    z-index: 200;
+    font-family: 'Share Tech Mono', monospace;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.8);
+    animation: slideIn 0.5s ease;
+}
+
+@keyframes slideIn {
+    from { transform: translateX(100px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+.highlight-pulse {
+    animation: pulseBorder 1.5s infinite;
+}
+
+@keyframes pulseBorder {
+    0% { border-color: #8ab4f8; }
+    50% { border-color: #ff4d6d; box-shadow: 0 0 15px rgba(255,77,109,0.5); }
+    100% { border-color: #8ab4f8; }
+}
+
+.next-prompt {
+    display: inline-block;
+    margin-top: 10px;
+    font-size: 13px;
+    letter-spacing: 1px;
+    color: #ff77aa;
+    direction: ltr;
+    text-align: left;
+    cursor: pointer;
+    user-select: none;
+}

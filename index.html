@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ARCHIVE 86 — Scene 01: The First Message</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- 1. شاشة البداية -->
+    <div id="start-screen" class="overlay-screen active">
+        <div class="rain-effect"></div>
+        <div class="start-content">
+            <div class="clock-badge">03:14</div>
+            <h1 class="glitch-title">ARCHIVE 86</h1>
+            <p class="subtitle">THE TRUTH IS HIDDEN.</p>
+            <button id="start-btn" class="cyber-btn">START INVESTIGATION</button>
+        </div>
+    </div>
+
+    <!-- 2. شاشة الانتقال السوداء والنصوص السينمائية -->
+    <div id="cinematic-screen" class="overlay-screen">
+        <p id="cinematic-text"></p>
+    </div>
+
+    <!-- 3. منطقة اللعب (الغرفة والبطلة) -->
+    <div id="game-container">
+        <!-- Scene 01: Exterior Building Intro -->
+        <div id="building-scene" class="scene-overlay hidden">
+            <img id="building-bg" src="bg.jpg" alt="Exterior Building" />
+            <div id="rain-layer" class="rain-layer"></div>
+        </div>
+
+        <!-- Heroine Sleeping Fullscreen Scene + Lightning Effect -->
+        <div id="sleeping-layer" class="sleeping-layer hidden">
+            <img id="sleeping-heroine" src="sleeping.jpg" alt="Lolita Sleeping" />
+            <div id="lightning-flash" class="lightning-flash"></div>
+        </div>
+
+        <!-- Heroine Awake / Surprised Fullscreen Scene -->
+        <div id="awake-layer" class="awake-layer hidden">
+            <img id="awake-heroine" src="awake-surprised.jpg" alt="Lolita Surprised" />
+        </div>
+
+        <!-- Opening Cutscene Image Layer (Clock / PC Glow / etc.) -->
+        <div id="cutscene-layer" class="cutscene-layer hidden">
+            <img id="cutscene-img" src="" alt="Cutscene Visual" />
+        </div>
+
+        <canvas id="gameCanvas" width="960" height="540"></canvas>
+
+        <!-- زر التفاعل العائم عند الاقتراب من الأشياء -->
+        <div id="interaction-prompt" class="hidden">[E] EXAMINE</div>
+
+        <!-- مؤشر الأدلة العلوي -->
+        <div id="hud">
+            <span id="location-tag">03:14 AM</span>
+            <button id="notebook-btn" class="hud-btn">📓 EVIDENCE (0)</button>
+        </div>
+
+        <!-- أزرار التحكم باللمس للموبايل -->
+        <div id="mobile-controls" aria-label="Mobile Controls">
+            <div class="mobile-dpad">
+                <button type="button" class="touch-btn touch-up" data-key="ArrowUp">▲</button>
+                <button type="button" class="touch-btn touch-left" data-key="ArrowLeft">◀</button>
+                <button type="button" class="touch-btn touch-right" data-key="ArrowRight">▶</button>
+                <button type="button" class="touch-btn touch-down" data-key="ArrowDown">▼</button>
+            </div>
+            <button type="button" id="touch-action-btn" class="touch-action" data-key="KeyE">ACT</button>
+        </div>
+
+        <!-- مربع حوار البطلة -->
+        <div id="dialogue-box" class="hidden">
+            <img id="speaker-avatar" class="speaker-avatar hidden" src="" alt="Lolita Portrait" />
+            <div class="dialogue-content">
+                <div class="speaker-name">LOLITA</div>
+                <p id="dialogue-text"></p>
+                <span id="next-prompt" class="next-prompt">Next ▸</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. نافذة الكمبيوتر (الرسالة والملف) -->
+    <div id="computer-modal" class="modal hidden">
+        <div class="modal-window">
+            <div class="modal-header">
+                <span>UNKNOWN SENDER — NEW MESSAGE</span>
+                <button class="close-modal" data-target="computer-modal">✕</button>
+            </div>
+            <div class="modal-body">
+                <p class="msg-text">"If you want to know the truth, start with the clock that stopped."</p>
+                <div class="attachment-box" id="open-archive-btn">
+                    📁 ATTACHMENT: <strong>ARCHIVE_86</strong> (انقر للفتح)
+                </div>
+
+                <!-- محتويات الملف المرفق -->
+                <div id="archive-contents" class="hidden">
+                    <hr>
+                    <div class="files-grid">
+                        <div class="file-item" id="btn-torn-page">📄 TORN PAGE</div>
+                        <div class="file-item locked">🖼️ UNKNOWN PHOTO (LOCKED)</div>
+                        <div class="file-item locked">🔒 ENCRYPTED FILE</div>
+                    </div>
+                    <div id="torn-page-view" class="paper-note hidden">
+                        <p>TIME NEVER LIES.</p>
+                        <h3>03:14</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. نافذة فحص الساعة واكتشاف الدليل -->
+    <div id="clock-modal" class="modal hidden">
+        <div class="modal-window clock-zoom">
+            <div class="modal-header">
+                <span>WALL CLOCK — CLOSE UP</span>
+                <button class="close-modal" data-target="clock-modal">✕</button>
+            </div>
+            <div class="modal-body center-text">
+                <div class="big-clock">03:14</div>
+                <p>العقارب متوقفة تماماً... يبدو أن هناك ورقة صغيرة عالقة خلف الإطار!</p>
+                <button id="take-clue-btn" class="cyber-btn">التقاط الورقة المخبأة</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 6. إشعار اكتشاف دليل جديد -->
+    <div id="clue-popup" class="modal hidden">
+        <div class="modal-window clue-card">
+            <span class="case-tag">CASE 001 — CLUE FOUND</span>
+            <h2 class="clue-number">86</h2>
+            <p>A mysterious number has been added to your evidence notebook.</p>
+            <button id="confirm-clue-btn" class="cyber-btn">حفظ في الدفتر</button>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            function updateGameScale() {
+                const container = document.getElementById("game-container");
+                if (!container) return;
+                const scale = Math.min(window.innerWidth / 960, window.innerHeight / 540);
+                container.style.setProperty("--game-scale", scale);
+            }
+
+            window.addEventListener("resize", updateGameScale);
+            window.addEventListener("orientationchange", updateGameScale);
+            updateGameScale();
+
+            document.addEventListener("DOMContentLoaded", () => {
+                updateGameScale();
+                document.querySelectorAll("#mobile-controls [data-key]").forEach((btn) => {
+                    const key = btn.getAttribute("data-key");
+
+                    const pressKey = (e) => {
+                        e.preventDefault();
+                        btn.classList.add("is-pressed");
+                        window.dispatchEvent(new KeyboardEvent("keydown", { key, code: key, bubbles: true }));
+                    };
+
+                    const releaseKey = (e) => {
+                        e.preventDefault();
+                        btn.classList.remove("is-pressed");
+                        window.dispatchEvent(new KeyboardEvent("keyup", { key, code: key, bubbles: true }));
+                    };
+
+                    btn.addEventListener("touchstart", pressKey, { passive: false });
+                    btn.addEventListener("touchend", releaseKey, { passive: false });
+                    btn.addEventListener("touchcancel", releaseKey, { passive: false });
+                });
+            });
+        })();
+    </script>
+    <script src="script.js"></script>
+    <script src="scene2.js"></script>
+</body>
+</html>
