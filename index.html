@@ -59,16 +59,20 @@
             <button id="notebook-btn" class="hud-btn">📓 EVIDENCE (0)</button>
         </div>
 
-        <!-- أزرار التحكم باللمس للموبايل -->
+        <!-- أزرار التحكم باللمس للموبايل (تظهر فقط عند بدء اللعب داخل الغرفة) -->
         <div id="mobile-controls" aria-label="Mobile Controls">
             <div class="mobile-dpad">
-                <button type="button" class="touch-btn touch-up" data-key="ArrowUp">▲</button>
-                <button type="button" class="touch-btn touch-left" data-key="ArrowLeft">◀</button>
-                <button type="button" class="touch-btn touch-right" data-key="ArrowRight">▶</button>
-                <button type="button" class="touch-btn touch-down" data-key="ArrowDown">▼</button>
+                <button type="button" id="btn-up" class="touch-btn touch-up">▲</button>
+                <button type="button" id="btn-left" class="touch-btn touch-left">◀</button>
+                <button type="button" id="btn-right" class="touch-btn touch-right">▶</button>
+                <button type="button" id="btn-down" class="touch-btn touch-down">▼</button>
             </div>
-            <button type="button" id="touch-action-btn" class="touch-action" data-key="KeyE">ACT</button>
         </div>
+
+        <!-- إشارة تفاعل لمسية عند الاقتراب من اللابتوب أو الساعة -->
+        <button type="button" id="mobile-interact-badge" class="mobile-interact-badge hidden">
+            👆 TAP PC
+        </button>
 
         <!-- مربع حوار البطلة -->
         <div id="dialogue-box" class="hidden">
@@ -136,43 +140,6 @@
         </div>
     </div>
 
-    <script>
-        (function () {
-            function updateGameScale() {
-                const container = document.getElementById("game-container");
-                if (!container) return;
-                const scale = Math.min(window.innerWidth / 960, window.innerHeight / 540);
-                container.style.setProperty("--game-scale", scale);
-            }
-
-            window.addEventListener("resize", updateGameScale);
-            window.addEventListener("orientationchange", updateGameScale);
-            updateGameScale();
-
-            document.addEventListener("DOMContentLoaded", () => {
-                updateGameScale();
-                document.querySelectorAll("#mobile-controls [data-key]").forEach((btn) => {
-                    const key = btn.getAttribute("data-key");
-
-                    const pressKey = (e) => {
-                        e.preventDefault();
-                        btn.classList.add("is-pressed");
-                        window.dispatchEvent(new KeyboardEvent("keydown", { key, code: key, bubbles: true }));
-                    };
-
-                    const releaseKey = (e) => {
-                        e.preventDefault();
-                        btn.classList.remove("is-pressed");
-                        window.dispatchEvent(new KeyboardEvent("keyup", { key, code: key, bubbles: true }));
-                    };
-
-                    btn.addEventListener("touchstart", pressKey, { passive: false });
-                    btn.addEventListener("touchend", releaseKey, { passive: false });
-                    btn.addEventListener("touchcancel", releaseKey, { passive: false });
-                });
-            });
-        })();
-    </script>
     <script src="script.js"></script>
     <script src="scene2.js"></script>
 </body>
