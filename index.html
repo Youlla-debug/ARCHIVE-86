@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ARCHIVE 86 — Scene 01: The First Message</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=3">
 </head>
 <body>
 
@@ -85,33 +85,51 @@
         </div>
     </div>
 
-    <!-- 4. نافذة الكمبيوتر (الرسالة والملف) -->
+    <!-- 4. نافذة الكمبيوتر (رسالة الإيميل فقط) -->
     <div id="computer-modal" class="modal hidden">
         <div class="modal-window">
             <div class="modal-header">
-                <span>UNKNOWN SENDER — NEW MESSAGE</span>
+                <span>LAPTOP MAIL — ARCHIVE_86</span>
                 <button class="close-modal" data-target="computer-modal">✕</button>
             </div>
             <div class="modal-body">
-                <p class="msg-text">"If you want to know the truth, start with the clock that stopped."</p>
-                <div class="attachment-box" id="open-archive-btn">
-                    📁 ATTACHMENT: <strong>ARCHIVE_86</strong> (انقر للفتح)
+                <div class="laptop-actions">
+                    <button type="button" id="open-email-btn" class="cyber-btn laptop-action-btn">
+                        📧 OPEN EMAIL
+                    </button>
                 </div>
 
-                <!-- محتويات الملف المرفق -->
-                <div id="archive-contents" class="hidden">
-                    <hr>
-                    <div class="files-grid">
-                        <div class="file-item" id="btn-torn-page">📄 TORN PAGE</div>
-                        <div class="file-item locked">🖼️ UNKNOWN PHOTO (LOCKED)</div>
-                        <div class="file-item locked">🔒 ENCRYPTED FILE</div>
-                    </div>
-                    <div id="torn-page-view" class="paper-note hidden">
-                        <p>TIME NEVER LIES.</p>
-                        <h3>03:14</h3>
-                    </div>
+                <!-- رسالة البريد تظهر عند كبس زر الإيميل -->
+                <div id="email-message-panel" class="msg-text hidden">
+                    <p>You're closer than you think.</p>
+                    <p>The truth is waiting at <strong>03:14</strong>.</p>
+                    <p>Don't overlook what's hidden behind the clock.</p>
+                    <p>Your first clue is right where time stops.</p>
+                    <p class="msg-sign">— Archive 86</p>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- فحص الورقة الممزقة (الدليل الموجود وراء الساعة — torn.jpg) -->
+    <div id="torn-page-view" class="torn-overlay hidden">
+        <div class="torn-backdrop"></div>
+
+        <div class="torn-stage">
+            <div class="torn-toolbar">
+                <button type="button" id="torn-zoom-in" class="torn-btn">+</button>
+                <button type="button" id="torn-zoom-out" class="torn-btn">−</button>
+                <button type="button" id="torn-reset" class="torn-btn">Reset</button>
+                <button type="button" id="torn-close-btn" class="torn-btn">✕</button>
+            </div>
+
+            <div id="torn-viewport" class="torn-viewport">
+                <div id="torn-paper-card" class="torn-paper-card">
+                    <img id="torn-img" src="torn.jpg" alt="Torn Page" draggable="false" />
+                </div>
+            </div>
+
+            <div id="torn-inspect-note" class="torn-inspect-note hidden"></div>
         </div>
     </div>
 
@@ -140,7 +158,7 @@
         </div>
     </div>
 
-    <script src="script.js"></script>
-    <script src="scene2.js"></script>
+    <script src="script.js?v=3"></script>
+    <script src="scene2.js?v=3"></script>
 </body>
 </html>
