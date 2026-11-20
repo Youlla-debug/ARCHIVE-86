@@ -2,6 +2,148 @@
 
 let scene2Active = false;
 
+// حالة التكبير والتحريك لنافذة فحص الورقة الممزقة (torn.jpg)
+let tornScale = 1;
+let tornPosX = 0;
+let tornPosY = 0;
+let isDraggingTorn = false;
+let dragStartX = 0;
+let dragStartY = 0;
+let tornEventsBound = false;
+
+function applyTornTransform() {
+    const card = document.getElementById('torn-paper-card');
+    if (!card) return;
+    card.style.transform = `translate(${tornPosX}px, ${tornPosY}px) scale(${tornScale})`;
+}
+
+function resetTornView() {
+    tornScale = 1;
+    tornPosX = 0;
+    tornPosY = 0;
+    applyTornTransform();
+}
+
+function openTornPageClue() {
+    const tornView = document.getElementById('torn-page-view');
+    if (!tornView) return;
+    resetTornView();
+    if (typeof gameState !== 'undefined') {
+        gameState.modalOpen = true;
+    }
+    tornView.classList.remove('hidden');
+}
+
+function closeTornPageClue() {
+    const tornView = document.getElementById('torn-page-view');
+    if (!tornView) return;
+    tornView.classList.add('hidden');
+    if (typeof gameState !== 'undefined') {
+        gameState.modalOpen = false;
+    }
+}
+
+function bindTornPageEvents() {
+    if (tornEventsBound) return;
+    tornEventsBound = true;
+
+    // كبسة زر الإيميل على اللابتوب لإظهار/إخفاء رسالة البريد
+    const openEmailBtn = document.getElementById('open-email-btn');
+    const emailPanel = document.getElementById('email-message-panel');
+    if (openEmailBtn && emailPanel) {
+        openEmailBtn.addEventListener('click', () => {
+            emailPanel.classList.toggle('hidden');
+        });
+    }
+
+    // فتح الورقة الممزقة (torn.jpg) من الأرشيف
+    const btnTornPage = document.getElementById('btn-torn-page');
+    if (btnTornPage) {
+        btnTornPage.addEventListener('click', () => {
+            const computerModal = document.getElementById('computer-modal');
+            if (computerModal) {
+                computerModal.classList.add('hidden');
+            }
+            openTornPageClue();
+        });
+    }
+
+    const zoomInBtn = document.getElementById('torn-zoom-in');
+    if (zoomInBtn) {
+        zoomInBtn.addEventListener('click', () => {
+            tornScale = Math.min(2.5, Number((tornScale + 0.25).toFixed(2)));
+            applyTornTransform();
+        });
+    }
+
+    const zoomOutBtn = document.getElementById('torn-zoom-out');
+    if (zoomOutBtn) {
+        zoomOutBtn.addEventListener('click', () => {
+            tornScale = Math.max(0.75, Number((tornScale - 0.25).toFixed(2)));
+            if (tornScale <= 1) {
+                tornPosX = 0;
+                tornPosY = 0;
+            }
+            applyTornTransform();
+        });
+    }
+
+    const resetBtn = document.getElementById('torn-reset');
+    if (resetBtn) {
+        resetBtn.addEventListener('click', resetTornView);
+    }
+
+    const closeBtn = document.getElementById('torn-close-btn');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeTornPageClue);
+    }
+
+    const backdrop = document.querySelector('.torn-backdrop');
+    if (backdrop) {
+        backdrop.addEventListener('click', closeTornPageClue);
+    }
+
+    const viewport = document.getElementById('torn-viewport');
+    if (viewport) {
+        viewport.addEventListener('mousedown', (e) => {
+            if (tornScale <= 1) return;
+            isDraggingTorn = true;
+            dragStartX = e.clientX - tornPosX;
+            dragStartY = e.clientY - tornPosY;
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (!isDraggingTorn) return;
+            tornPosX = e.clientX - dragStartX;
+            tornPosY = e.clientY - dragStartY;
+            applyTornTransform();
+        });
+
+        window.addEventListener('mouseup', () => {
+            isDraggingTorn = false;
+        });
+    }
+
+    // عند التقاط الورقة المخبأة، نعرض الدليل (torn.jpg) مباشرة بعد تأكيد الدليل
+    const takeClueBtn = document.getElementById('take-clue-btn');
+    if (takeClueBtn && !takeClueBtn.dataset.tornBound) {
+        takeClueBtn.dataset.tornBound = 'true';
+        takeClueBtn.addEventListener('click', () => {
+            setTimeout(() => {
+                const popup = document.getElementById('clue-popup');
+                if (popup && !popup.classList.contains('hidden')) {
+                    popup.classList.add('hidden');
+                    openTornPageClue();
+                }
+            }, 80);
+        });
+    }
+}
+
+window.openNotebook = function () {
+    openTornPageClue();
+};
+
 function startScene02() {
     if (scene2Active) return;
     scene2Active = true;
@@ -117,4 +259,9 @@ function bindScene02Events() {
             if (mapModal) mapModal.classList.remove('hidden');
         }
     });
+}
+
+document.addEventListener('DOMContentLoaded', bindTornPageEvents);
+if (document.readyState !== 'loading') {
+    bindTornPageEvents();
 }
