@@ -4,6 +4,23 @@ const ctx = canvas.getContext('2d');
 canvas.width = 960;
 canvas.height = 540;
 
+// تكبير اللعبة لتملأ الشاشة بالكامل مع الحفاظ على نسبة 960x540
+function forceFullScreenScale() {
+    const container = document.getElementById('game-container');
+    if (!container) return;
+
+    const scale = Math.min(window.innerWidth / 960, window.innerHeight / 540);
+    container.style.setProperty('--game-scale', scale.toFixed(4));
+    container.style.setProperty('transform', `scale(${scale.toFixed(4)})`, 'important');
+    container.style.setProperty('transform-origin', 'center center', 'important');
+}
+
+window.addEventListener('resize', forceFullScreenScale);
+window.addEventListener('orientationchange', forceFullScreenScale);
+document.addEventListener('fullscreenchange', forceFullScreenScale);
+window.addEventListener('load', forceFullScreenScale);
+forceFullScreenScale();
+
 // Load Room and Heroine Images (.jpg)
 const roomBg = new Image();
 roomBg.src = 'room.jpg';
@@ -657,6 +674,12 @@ document.getElementById('start-btn').addEventListener('click', (e) => {
         e.currentTarget.blur();
     }
 
+    const docEl = document.documentElement;
+    if (docEl && docEl.requestFullscreen && !document.fullscreenElement) {
+        docEl.requestFullscreen().then(forceFullScreenScale).catch(forceFullScreenScale);
+    }
+    forceFullScreenScale();
+
     document.getElementById('start-screen').classList.remove('active');
 
     startHeavyRainSound(0.22);
@@ -934,7 +957,7 @@ function checkInteraction() {
         } else if (!gameState.clueFound) {
             openModal('clock-modal');
         } else {
-            showDialogue('You already took the note from behind the clock.', null);
+            showDialogue('You already took the torn page from behind the clock.', null);
         }
     }
 }
@@ -949,7 +972,10 @@ function openModal(id) {
 document.querySelectorAll('.close-modal').forEach((btn) => {
     btn.addEventListener('click', (e) => {
         const targetId = e.currentTarget.getAttribute('data-target');
-        document.getElementById(targetId).classList.add('hidden');
+        const targetEl = document.getElementById(targetId);
+        if (targetEl) {
+            targetEl.classList.add('hidden');
+        }
         gameState.modalOpen = false;
 
         if (
@@ -965,36 +991,31 @@ document.querySelectorAll('.close-modal').forEach((btn) => {
     });
 });
 
-// Open Archive Attachment
-document.getElementById('open-archive-btn').addEventListener('click', () => {
-    document.getElementById('archive-contents').classList.remove('hidden');
-});
+// Take Clock Clue (الورقة المخبأة وراء الساعة هي نفسها torn.jpg)
+const takeClueBtn = document.getElementById('take-clue-btn');
+if (takeClueBtn) {
+    takeClueBtn.addEventListener('click', () => {
+        document.getElementById('clock-modal').classList.add('hidden');
+        document.getElementById('clue-popup').classList.remove('hidden');
+    });
+}
 
-// Open Torn Page
-document.getElementById('btn-torn-page').addEventListener('click', () => {
-    document.getElementById('torn-page-view').classList.remove('hidden');
-});
+// Confirm Clue -> يفتح الورقة الممزقة (torn.jpg) كدليل
+const confirmClueBtn = document.getElementById('confirm-clue-btn');
+if (confirmClueBtn) {
+    confirmClueBtn.addEventListener('click', () => {
+        document.getElementById('clue-popup').classList.add('hidden');
 
-// Take Clock Clue
-document.getElementById('take-clue-btn').addEventListener('click', () => {
-    document.getElementById('clock-modal').classList.add('hidden');
-    document.getElementById('clue-popup').classList.remove('hidden');
-});
+        gameState.clueFound = true;
+        document.getElementById('notebook-btn').innerText = '📓 EVIDENCE (1)';
 
-// Confirm Clue
-document.getElementById('confirm-clue-btn').addEventListener('click', () => {
-    document.getElementById('clue-popup').classList.add('hidden');
-
-    gameState.modalOpen = false;
-    gameState.clueFound = true;
-
-    document.getElementById('notebook-btn').innerText = '📓 EVIDENCE (1)';
-
-    showDialogue(
-        '«What is the connection between this number and the file? Why was it hidden here?»',
-        null
-    );
-});
+        if (typeof openTornPageClue === 'function') {
+            openTornPageClue();
+        } else {
+            gameState.modalOpen = false;
+        }
+    });
+}
 
 // Open Evidence Notebook
 const notebookBtn = document.getElementById('notebook-btn');
@@ -1011,9 +1032,43 @@ if (notebookBtn) {
         if (typeof openNotebook === 'function') {
             openNotebook();
         } else {
-            showDialogue('Evidence #001: Number [86] found behind the stopped clock (03:14).', null);
+            showDialogue('Evidence #001: Torn page found behind the stopped clock (03:14).', null);
         }
     });
+}
+
+function drawHeroine() {
+    if (!heroineLoaded) {
+        ctx.save();
+        ctx.fillStyle = '#8ab4f8';
+        ctx.fillRect(player.x, player.y, player.width, player.height);
+        ctx.restore();
+        return;
+    }
+
+    const bobOffset = player.isMoving ? Math.sin(player.walkCycle) * 4 : 0;
+
+    ctx.save();
+    if (player.facing === 'left') {
+        ctx.translate(player.x + player.width / 2, player.y + player.height / 2 + bobOffset);
+        ctx.scale(-1, 1);
+        ctx.drawImage(
+            heroineImg,
+            -player.width / 2,
+            -player.height / 2,
+            player.width,
+            player.height
+        );
+    } else {
+        ctx.drawImage(
+            heroineImg,
+            player.x,
+            player.y + bobOffset,
+            player.width,
+            player.height
+        );
+    }
+    ctx.restore();
 }
 
 // Render Loop
@@ -1024,99 +1079,43 @@ function draw() {
         ctx.drawImage(roomBg, 0, 0, canvas.width, canvas.height);
     }
 
+    // رسم أيقونة/رسالة البريد الصغيرة على اللابتوب قبل قراءتها
     if (gameState.messageArrived && !gameState.messageRead) {
+        const msgX = 142;
+        const msgY = 252;
+        const boxW = 24;
+        const boxH = 18;
+        const tiltAngle = -0.15;
+
+        ctx.save();
+        ctx.translate(msgX + boxW / 2, msgY + boxH / 2);
+        ctx.rotate(tiltAngle);
+
+        // ظرف الرسالة
         ctx.fillStyle = '#ff4d6d';
-        ctx.fillRect(175, 290, 22, 16);
+        ctx.fillRect(-boxW / 2, -boxH / 2, boxW, boxH);
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(-boxW / 2, -boxH / 2, boxW, boxH);
 
-        ctx.fillStyle = '#fff';
-        ctx.font = '11px monospace';
-        ctx.fillText('✉', 180, 302);
-    }
-
-    if (gameState.started) {
-        const bounceOffset = player.isMoving
-            ? Math.abs(Math.sin(player.walkCycle)) * 4
-            : 0;
-
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.42)';
+        // خط الظرف المائل ليعطي شكل رسالة بريد واضح
         ctx.beginPath();
-        ctx.ellipse(
-            player.x + player.width / 2,
-            player.y + player.height,
-            player.width * 0.34,
-            6,
-            0,
-            0,
-            Math.PI * 2
-        );
-        ctx.fill();
+        ctx.moveTo(-boxW / 2, -boxH / 2);
+        ctx.lineTo(0, 1);
+        ctx.lineTo(boxW / 2, -boxH / 2);
+        ctx.stroke();
 
-        if (heroineLoaded) {
-            ctx.save();
-
-            if (player.facing === 'left') {
-                ctx.translate(
-                    player.x + player.width,
-                    player.y - bounceOffset
-                );
-                ctx.scale(-1, 1);
-                ctx.drawImage(
-                    heroineImg,
-                    0,
-                    0,
-                    player.width,
-                    player.height
-                );
-            } else {
-                ctx.drawImage(
-                    heroineImg,
-                    player.x,
-                    player.y - bounceOffset,
-                    player.width,
-                    player.height
-                );
-            }
-
-            ctx.restore();
-        } else {
-            ctx.fillStyle = '#ff66a3';
-            ctx.fillRect(
-                player.x,
-                player.y - bounceOffset,
-                player.width,
-                player.height
-            );
-        }
-
-        updatePlayer();
-        updateInteractions();
+        ctx.restore();
     }
 
-    requestAnimationFrame(draw);
+    drawHeroine();
 }
 
-draw();
-
-// Responsive Game Scaling
-function resizeGame() {
-    const container = document.getElementById('game-container');
-    if (!container) return;
-
-    const windowWidth = window.innerWidth || document.documentElement.clientWidth;
-    const windowHeight = window.innerHeight || document.documentElement.clientHeight;
-
-    let scale;
-    if (isMobileDevice()) {
-        scale = windowWidth / 960;
-    } else {
-        scale = Math.min(windowWidth / 960, windowHeight / 540);
-    }
-
-    container.style.transformOrigin = 'center center';
-    container.style.transform = `scale(${scale})`;
+function gameLoop() {
+    updatePlayer();
+    updateInteractions();
+    draw();
+    requestAnimationFrame(gameLoop);
 }
 
-window.addEventListener('resize', resizeGame);
-window.addEventListener('orientationchange', resizeGame);
-window.addEventListener('DOMContentLoaded', resizeGame);
-resizeGame();
+gameLoop();
